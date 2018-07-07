@@ -1,0 +1,9 @@
+$font-stack: Helvetica,sans-serif;
+$primary-color: rgb(178, 224, 52);
+
+div {
+  font: 100% $font-stack;
+  border: 2px solid $primary-color;
+  background: url(../img/4.jpg) no-repeat;
+  background-size: 50%;
+}
