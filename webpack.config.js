@@ -1,7 +1,12 @@
 const path=require('path');
 const HtmlwebpackPlugin = require('html-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin')
+const webpack = require('webpack');
 
+// HappyPack加快webpack构建速度
+const HappyPack = require('happypack');
+const os = require('os');
+const happyThreadPool = HappyPack.ThreadPool({ size: os.cpus().length });
 
 module.exports ={
   //入口文件配置
@@ -33,10 +38,20 @@ module.exports ={
           use:["css-loader","postcss-loader"]
         }),
       },
-      {   //配置辅助loader
-        test:/\.(png|jpg|gif|svg|eot|ttf|woff|woff2)$/,
+      {   //配置辅助loader,处理图片  
+        test:/\.(png|jpg|gif)$/,
         loader:'url-loader',
-        options:{limit:8091}
+        options:{limit:8192,name:"images/[name].[ext]"}
+      },
+      {   //配置辅助loader,处理图片  
+        test:/\.(png|jpg|gif)$/,
+        loader:'url-loader',
+        options:{limit:8192,name:"images/[name].[ext]"}
+      },
+      { //处理图片外的其他文件类型
+          test:/\.(appcache|svg|eot|ttf|woff|woff2|mp3|pdf)(\?|$)/,
+          include:path.resolve(__dirname,'src'),
+          loader:'file-loader?name=[name].[ext]' 
       },
       {
         test:/\.less$/,
@@ -52,6 +67,21 @@ module.exports ={
           use:["css-loader","postcss-loader","sass-loader"]
         }),
       },
+      {
+        test:/\.jsx$/,
+        exclude:/(node_modules|bower_components)/,//排除XXX类型文件
+        use:{
+            loader:'babel-loader'           
+        }
+      },
+      {
+        test:/\.js$/,    
+        include:path.resolve(__dirname),
+        //把对.js 的文件处理交给id为happyBabel 的HappyPack 的实例执行
+        loader: 'happypack/loader?id=happyBabel',
+        //排除node_modules 目录下的文件
+        exclude: /node_modules/,
+      }
     ]
   },
 
@@ -74,10 +104,42 @@ module.exports ={
       */
     }),
     new ExtractTextPlugin("styles.css"), // 插件声明
+    
+    // new HappyPack({
+    //   id:"happybabel",
+    //   loaders:['babel-loader'],
+    //   threadPool:happyThreadPool,
+    //   cache:true,
+    //   verbose:true
+    // }),
+    
+    // happypack
+    new HappyPack({
+      //用id来标识 happypack处理那里类文件
+      id: 'happyBabel',
+      //如何处理  用法和loader 的配置一样
+      loaders: [{
+        loader: 'babel-loader?cacheDirectory=true',
+      }],
+      //共享进程池
+      threadPool: happyThreadPool,
+      //允许 HappyPack 输出日志
+      verbose: true,
+    }),
+
+
+
+    /**
+     * 我好气啊，阅读了一大堆帖子，好几种配置，最后都报同一个错，暂时放弃。 
+     */
+    // new webpack.DllReferencePlugin({
+    //   manifest: require(path.join(__dirname, 'dist', 'manifest.json')),
+    // }),
   ],
 
   resolve:{
     extensions:['.js','jsx','less','.css','.scss']//后缀名自动补全
   },
-  
+  // webpack 提供的辅助工具，调试的时候能正确的显示源代码出错的行数  eval-soure-map用于开发模式下
+  devtool:'eval-soure-map'
 }

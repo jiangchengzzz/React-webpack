@@ -1,7 +1,19 @@
-require('./css/base.css');
-require('./scss/public.scss');
-require('./less/public.less');
+import React from 'react';
+import ReactDOM from 'react-dom';
+import {NavLink,Route,BrowserRouter,HashRouter as Router, Swith,Redirect} from 'react-router-dom';
+import RouteConfig from './config/Route.jsx';
+import {Provider} from 'react-redux';
+import store from './store/store.jsx';
 
-let app = document.createElement("div");
-app.innerHTML = '<h1> nihao1呀呀哎呀!</h1>';
-document.body.appendChild(app);
+
+var div=document.createElement("div");
+div.setAttribute("id","root");
+document.body.insertBefore(div,document.body.childNodes[0]);
+
+ReactDOM.render(
+    <Provider store={store}>
+        <Router>
+            {RouteConfig}
+        </Router>
+    </Provider>
+    ,document.getElementById('root'));
